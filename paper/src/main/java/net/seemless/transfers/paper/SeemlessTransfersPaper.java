@@ -92,19 +92,20 @@ public class SeemlessTransfersPaper extends JavaPlugin implements Listener {
                             double z = Double.parseDouble(parts[4]);
                             float yaw = Float.parseFloat(parts[5]);
                             float pitch = Float.parseFloat(parts[6]);
-                            Bukkit.getScheduler().runTask(this, () -> {
-                                Player onlinePlayer = Bukkit.getPlayer(uuid);
-                                if (onlinePlayer != null && onlinePlayer.isOnline()) {
+
+                            Player onlinePlayer = Bukkit.getPlayer(uuid);
+                            if (onlinePlayer != null && onlinePlayer.isOnline()) {
+                                FoliaCompat.runOnPlayer(this, onlinePlayer, () -> {
                                     teleportToTarget(onlinePlayer, x, y, z, yaw, pitch);
                                     getLogger().info("Teleported already-online player " + onlinePlayer.getName() + " to preload target!");
-                                } else if (!Bukkit.getWorlds().isEmpty()) {
-                                    org.bukkit.World world = Bukkit.getWorlds().get(0);
-                                    int chunkX = (int) x >> 4;
-                                    int chunkZ = (int) z >> 4;
-                                    world.getChunkAtAsync(chunkX, chunkZ);
-                                    getLogger().info("Pre-loaded chunk (" + chunkX + ", " + chunkZ + ") for incoming player!");
-                                }
-                            });
+                                });
+                            } else if (!Bukkit.getWorlds().isEmpty()) {
+                                org.bukkit.World world = Bukkit.getWorlds().get(0);
+                                int chunkX = (int) x >> 4;
+                                int chunkZ = (int) z >> 4;
+                                FoliaCompat.preloadChunkAsync(world, chunkX, chunkZ);
+                                getLogger().info("Pre-loaded chunk (" + chunkX + ", " + chunkZ + ") for incoming player!");
+                            }
                         }
                     } catch (Exception e) {
                         getLogger().warning("Failed to parse preload payload: " + e.getMessage());
@@ -145,21 +146,17 @@ public class SeemlessTransfersPaper extends JavaPlugin implements Listener {
     }
 
     private void teleportToTarget(Player player, double x, double y, double z, float yaw, float pitch) {
-        Bukkit.getScheduler().runTask(this, () -> {
+        FoliaCompat.runOnPlayer(this, player, () -> {
             if (!player.isOnline()) return;
             org.bukkit.World world = player.getWorld();
-            int chunkX = (int) x >> 4;
-            int chunkZ = (int) z >> 4;
+            Location loc = new Location(world, x, y, z, yaw, pitch);
 
-            // Asynchronously preload destination chunk for instant appearance without lag
-            world.getChunkAtAsync(chunkX, chunkZ).thenRun(() -> {
-                Bukkit.getScheduler().runTask(this, () -> {
-                    if (!player.isOnline()) return;
-                    Location loc = new Location(world, x, y, z, yaw, pitch);
-                    player.teleport(loc);
+            // teleportAsync handles asynchronous chunk generation/loading and cross-region ticking safely on both Folia and Paper
+            player.teleportAsync(loc).thenAccept(success -> {
+                if (Boolean.TRUE.equals(success)) {
                     getLogger().info("Teleported incoming player " + player.getName() + " to "
                             + String.format("%.1f, %.1f, %.1f (yaw: %.1f, pitch: %.1f)", x, y, z, yaw, pitch));
-                });
+                }
             });
         });
     }
@@ -205,7 +202,7 @@ public class SeemlessTransfersPaper extends JavaPlugin implements Listener {
             }
 
             // 3. The native 1.20.5+ transfer packet wrapper in Paper API (1-tick delay to ensure PeerBridge socket arrival)
-            Bukkit.getScheduler().runTaskLater(this, () -> {
+            FoliaCompat.runDelayedOnPlayer(this, target, () -> {
                 if (target.isOnline()) {
                     target.transfer(host, port);
                 }
@@ -222,6 +219,9 @@ public class SeemlessTransfersPaper extends JavaPlugin implements Listener {
     }
 
     private void disableConnectionThrottle() {
+        if (FoliaCompat.IS_FOLIA) {
+            return;
+        }
         try {
             // 1. Modify in-memory configuration on CraftServer
             Object server = Bukkit.getServer();

@@ -4,10 +4,10 @@
 
   # Seemless Transfers
 
-  **High-speed, zero-lag server transfers with precise coordinate teleportation across Fabric, Paper, and NeoForge.**
+  **High-speed, zero-lag server transfers with precise coordinate teleportation across Fabric, Paper, Folia, and NeoForge.**
 
   [![Minecraft](https://img.shields.io/badge/Minecraft-1.20.5%20--%2026.3-brightgreen.svg)](https://www.minecraft.net/)
-  [![Platform](https://img.shields.io/badge/Platform-Fabric%20%7C%20Paper%20%7C%20NeoForge-blue.svg)](#features)
+  [![Platform](https://img.shields.io/badge/Platform-Fabric%20%7C%20Paper%20%7C%20Folia%20%7C%20NeoForge-blue.svg)](#features)
   [![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red.svg)](LICENSE)
   [![Author](https://img.shields.io/badge/Author-TD__Hunterrr-orange.svg)](https://github.com/TDHunterrr)
 
@@ -28,7 +28,7 @@
 - 🎨 **Multi-Colored Brigadier Syntax Highlighting:** Native Brigadier command nodes registered across all platforms (Paper, Fabric, NeoForge). Displays rich multi-colored parameter hints in chat (yellow for player, green for IP, aqua for port, gold for coordinates and rotation).
 - 🍪 **Cryptographic Transfer Cookies:** Automatically encodes and verifies HMAC-SHA256 client cookies as an instant fallback mechanism.
 - ⏱️ **Zero Connection Throttling:** Automatically overrides Bukkit/Paper's legacy connection throttling (`0ms`), allowing players to hop between servers repeatedly without triggering `"Connection throttled!"` kicks.
-- 🌐 **Cross-Platform Compatibility:** Operates seamlessly between **Fabric**, **Paper**, and **NeoForge** servers.
+- 🌐 **Cross-Platform Compatibility:** Operates seamlessly between **Fabric**, **Paper**, **Folia**, and **NeoForge** servers.
 
 ---
 
@@ -51,7 +51,7 @@ Fast-transfers the specified player to a target server and positions them at the
 
 ### Permissions
 - **Fabric / NeoForge:** Requires Operator Level 2 (`LEVEL_GAMEMASTERS`).
-- **Paper:** Requires Operator status (`op`) or the `seemless.admin` permission node.
+- **Paper / Folia:** Requires Operator status (`op`) or the `seemless.admin` permission node.
 
 ---
 
@@ -60,7 +60,7 @@ Fast-transfers the specified player to a target server and positions them at the
 Place the compiled universal jar into the corresponding folder of each server:
 
 - **Fabric:** Drop into the `mods/` folder (requires [Fabric Loader](https://fabricmc.net/) and [Fabric API](https://modrinth.com/mod/fabric-api)).
-- **Paper:** Drop into the `plugins/` folder (Paper 1.20.6+).
+- **Paper / Folia:** Drop into the `plugins/` folder (Paper / Folia 1.20.6+).
 - **NeoForge:** Drop into the `mods/` folder.
 
 ---
