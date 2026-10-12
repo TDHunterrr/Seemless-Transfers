@@ -1,0 +1,10 @@
+name: SeemlessTransfers
+version: '${version}'
+main: net.seemless.transfers.paper.SeemlessTransfersPaper
+api-version: '1.20'
+authors: [ TD_Hunterrr ]
+description: Optimized server transfers for Fabric, Paper, and NeoForge.
+permissions:
+  seemless.admin:
+    description: Allows using /sl command
+    default: op
