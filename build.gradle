@@ -14,7 +14,7 @@ subprojects {
     }
 }
 
-version = '0.0.1'
+version = project.findProperty('version') ?: '0.1.0-beta.1'
 
 jar {
     dependsOn ':fabric:remapJar', ':paper:jar', ':neoforge:jar'
