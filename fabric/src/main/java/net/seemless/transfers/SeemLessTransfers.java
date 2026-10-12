@@ -59,6 +59,11 @@ public class SeemLessTransfers implements ModInitializer {
 		// Teleport player upon connection
 		net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			net.minecraft.server.level.ServerPlayer player = handler.getPlayer();
+
+			// 1. Request client cookie directly over the primary game port (works on all shared hosting providers)
+			net.seemless.transfers.network.CookieAuthReceiver.requestAndInterceptCookie(player, server);
+
+			// 2. Also check instant PeerBridge socket memory cache if direct socket was reachable
 			server.execute(() -> {
 				if (player.hasDisconnected()) return;
 				net.seemless.transfers.network.PeerBridge.PreloadTarget target =

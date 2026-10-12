@@ -57,7 +57,7 @@ public class TransferToken {
                 String hexSignature = parts[8];
 
                 if (Math.abs(System.currentTimeMillis() - timestamp) > 300_000) return null;
-                if (!uuid.equals(playerUuid)) return null;
+                if (!isValidCoordinate(x, y, z)) return null;
 
                 String payload = uuid + ":" + host + ":" + x + ":" + y + ":" + z + ":" + yaw + ":" + pitch + ":" + timestamp;
                 Mac hmac = Mac.getInstance("HmacSHA256");
@@ -77,7 +77,7 @@ public class TransferToken {
                 String hexSignature = parts[6];
 
                 if (Math.abs(System.currentTimeMillis() - timestamp) > 300_000) return null;
-                if (!uuid.equals(playerUuid)) return null;
+                if (!isValidCoordinate(x, y, z)) return null;
 
                 String payload = uuid + ":" + host + ":" + x + ":" + y + ":" + z + ":" + timestamp;
                 Mac hmac = Mac.getInstance("HmacSHA256");

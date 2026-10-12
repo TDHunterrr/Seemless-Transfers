@@ -188,7 +188,7 @@ public class PeerBridge {
                     }
                 }
             }
-            System.err.println("[SeemlessTransfers] PeerBridge notice: Preload socket could not reach " + targetHost + ":" + targetGamePort);
+            System.out.println("[SeemlessTransfers] PeerBridge direct socket unavailable for " + targetHost + ":" + targetGamePort + "; transferring seamlessly via primary-port client cookie.");
         });
     }
 
