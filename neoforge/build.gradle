@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral()
+}
+
+def userHome = gradle.gradleUserHomeDir.absolutePath.replace('\\', '/')
+
+dependencies {
+    compileOnly files(
+        "${userHome}/caches/modules-2/files-2.1/net.neoforged/neoforge/21.11.0-beta/cfa77909f4e4f258c1ec48cfde324e1fd6939f85/neoforge-21.11.0-beta-universal.jar",
+        "${userHome}/caches/modules-2/files-2.1/net.neoforged.fancymodloader/loader/10.0.34/940266c61386e450a76e94b72f06343ab9d3417e/loader-10.0.34.jar",
+        "${userHome}/caches/modules-2/files-2.1/net.neoforged/bus/8.0.5/5b2d33285ab5d1554e9798ad98c40d6ea3868bd5/bus-8.0.5.jar",
+        "${userHome}/caches/modules-2/files-2.1/com.mojang/brigadier/1.3.10/d15b53a14cf20fdcaa98f731af5dda654452c010/brigadier-1.3.10.jar",
+        "${userHome}/caches/modules-2/files-2.1/org.jspecify/jspecify/1.0.0/7425a601c1c7ec76645a78d22b8c6a627edee507/jspecify-1.0.0.jar",
+        "${userHome}/caches/modules-2/files-2.1/it.unimi.dsi/fastutil/8.5.18/a6cff377eecc19c2037bf31568a6d7106b50ba1f/fastutil-8.5.18.jar",
+        "${userHome}/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged/26.1-net.fabricmc.yarn.26_1.1.20+build.1-v2/minecraft-merged-26.1-net.fabricmc.yarn.26_1.1.20+build.1-v2.jar"
+    )
+    compileOnly 'it.unimi.dsi:fastutil:8.5.18'
+}
+
+processResources {
+    def props = [version: project.version]
+    inputs.properties props
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand props
+    }
+}
