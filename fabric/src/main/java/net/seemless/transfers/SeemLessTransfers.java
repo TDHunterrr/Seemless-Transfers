@@ -29,6 +29,7 @@ public class SeemLessTransfers implements ModInitializer {
 							String[] parts = payload.split(":");
 							if (parts.length >= 7) {
 								java.util.UUID uuid = java.util.UUID.fromString(parts[0]);
+								String playerName = parts[1];
 								double x = Double.parseDouble(parts[2]);
 								double y = Double.parseDouble(parts[3]);
 								double z = Double.parseDouble(parts[4]);
@@ -36,14 +37,16 @@ public class SeemLessTransfers implements ModInitializer {
 								float pitch = Float.parseFloat(parts[6]);
 								server.execute(() -> {
 									net.minecraft.server.level.ServerPlayer p = server.getPlayerList().getPlayer(uuid);
+									if (p == null && playerName != null && !playerName.isEmpty()) {
+										p = server.getPlayerList().getPlayerByName(playerName);
+									}
 									if (p != null) {
-										p.teleportTo(p.level(), x, y, z, java.util.Collections.emptySet(), yaw, pitch, false);
-										LOGGER.info("Teleported already-joined player {} to ({}, {}, {})",
-												p.getName().getString(), x, y, z);
+										applyTeleport(server, p, x, y, z, yaw, pitch);
 									}
 								});
 							}
-						} catch (Exception ignored) {
+						} catch (Exception e) {
+							LOGGER.error("Failed to parse preload request: " + payload, e);
 						}
 					}
 			);
@@ -59,12 +62,39 @@ public class SeemLessTransfers implements ModInitializer {
 			server.execute(() -> {
 				if (player.hasDisconnected()) return;
 				net.seemless.transfers.network.PeerBridge.PreloadTarget target =
-						net.seemless.transfers.network.PeerBridge.getAndConsumeTarget(player.getUUID());
+						net.seemless.transfers.network.PeerBridge.getAndConsumeTarget(player.getUUID(), player.getName().getString());
 				if (target != null) {
-					player.teleportTo(player.level(), target.x(), target.y(), target.z(),
-							java.util.Collections.emptySet(), target.yaw(), target.pitch(), false);
-					LOGGER.info("Teleported incoming transferred player {} to ({}, {}, {}) with yaw {} pitch {}",
-							player.getName().getString(), target.x(), target.y(), target.z(), target.yaw(), target.pitch());
+					applyTeleport(server, player, target.x(), target.y(), target.z(), target.yaw(), target.pitch());
+				}
+			});
+		});
+	}
+
+	public static void applyTeleport(net.minecraft.server.MinecraftServer server,
+									 net.minecraft.server.level.ServerPlayer player,
+									 double x, double y, double z, float yaw, float pitch) {
+		if (player == null || player.hasDisconnected()) return;
+
+		// 1. Asynchronously / synchronously preload destination chunk for smooth arrival
+		net.minecraft.server.level.ServerLevel level = player.level() instanceof net.minecraft.server.level.ServerLevel sl
+				? sl : server.overworld();
+		int chunkX = ((int) x) >> 4;
+		int chunkZ = ((int) z) >> 4;
+		level.getChunkSource().getChunk(chunkX, chunkZ, net.minecraft.world.level.chunk.status.ChunkStatus.FULL, true);
+
+		// 2. Perform direct teleportation
+		player.teleportTo(level, x, y, z, java.util.Collections.emptySet(), yaw, pitch, false);
+		player.connection.teleport(x, y, z, yaw, pitch);
+		player.setYHeadRot(yaw);
+		LOGGER.info("Teleported transferred player {} to ({}, {}, {}) with yaw {} pitch {}",
+				player.getName().getString(), x, y, z, yaw, pitch);
+
+		// 3. Confirm position after terrain download handshake (150ms delay) to prevent vanilla client spawn override
+		java.util.concurrent.CompletableFuture.delayedExecutor(150, java.util.concurrent.TimeUnit.MILLISECONDS).execute(() -> {
+			server.execute(() -> {
+				if (!player.hasDisconnected()) {
+					player.connection.teleport(x, y, z, yaw, pitch);
+					player.setYHeadRot(yaw);
 				}
 			});
 		});

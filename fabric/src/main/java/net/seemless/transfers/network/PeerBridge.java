@@ -44,6 +44,7 @@ public class PeerBridge {
         public long timestamp() { return timestamp; }
     }
     private static final Map<UUID, PreloadTarget> PRELOAD_TARGETS = new ConcurrentHashMap<>();
+    private static final Map<String, PreloadTarget> PRELOAD_TARGETS_BY_NAME = new ConcurrentHashMap<>();
 
     public static synchronized void startServer(int preferredPort, Consumer<String> preloadHandler) {
         if (running) return;
@@ -91,7 +92,9 @@ public class PeerBridge {
 
     private static void handleConnection(Socket socket, Consumer<String> preloadHandler) {
         try (socket;
-             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
+            socket.setSoTimeout(2000);
             String line = reader.readLine();
             if (line != null && line.startsWith("PRELOAD ")) {
                 String payload = line.substring(8);
@@ -100,24 +103,35 @@ public class PeerBridge {
                 if (parts.length >= 7) {
                     try {
                         UUID uuid = UUID.fromString(parts[0]);
+                        String playerName = parts[1];
                         double x = Double.parseDouble(parts[2]);
                         double y = Double.parseDouble(parts[3]);
                         double z = Double.parseDouble(parts[4]);
                         float yaw = Float.parseFloat(parts[5]);
                         float pitch = Float.parseFloat(parts[6]);
-                        PRELOAD_TARGETS.put(uuid, new PreloadTarget(x, y, z, yaw, pitch, System.currentTimeMillis()));
+                        PreloadTarget target = new PreloadTarget(x, y, z, yaw, pitch, System.currentTimeMillis());
+                        PRELOAD_TARGETS.put(uuid, target);
+                        if (playerName != null && !playerName.isEmpty()) {
+                            PRELOAD_TARGETS_BY_NAME.put(playerName.toLowerCase(java.util.Locale.ROOT), target);
+                        }
                     } catch (Exception ignored) {
                     }
                 } else if (parts.length >= 5) {
                     try {
                         UUID uuid = UUID.fromString(parts[0]);
+                        String playerName = parts[1];
                         double x = Double.parseDouble(parts[2]);
                         double y = Double.parseDouble(parts[3]);
                         double z = Double.parseDouble(parts[4]);
-                        PRELOAD_TARGETS.put(uuid, new PreloadTarget(x, y, z, 0.0f, 0.0f, System.currentTimeMillis()));
+                        PreloadTarget target = new PreloadTarget(x, y, z, 0.0f, 0.0f, System.currentTimeMillis());
+                        PRELOAD_TARGETS.put(uuid, target);
+                        if (playerName != null && !playerName.isEmpty()) {
+                            PRELOAD_TARGETS_BY_NAME.put(playerName.toLowerCase(java.util.Locale.ROOT), target);
+                        }
                     } catch (Exception ignored) {
                     }
                 }
+                writer.println("ACK");
                 if (preloadHandler != null) {
                     preloadHandler.accept(payload);
                 }
@@ -138,30 +152,75 @@ public class PeerBridge {
                     DEFAULT_PEER_PORT + 2,
                     targetGamePort
             };
-            for (int port : candidatePorts) {
-                if (port <= 0 || port > 65535) continue;
-                try (Socket socket = new Socket()) {
-                    socket.connect(new InetSocketAddress(targetHost, port), 250);
-                    socket.setSoTimeout(1000);
-                    try (PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
-                        writer.println("PRELOAD " + uuid + ":" + name + ":" + x + ":" + y + ":" + z + ":" + yaw + ":" + pitch);
-                        return; // Successfully sent to target server
-                    }
+
+            java.util.List<java.net.InetAddress> targetAddresses = new java.util.ArrayList<>();
+            try {
+                java.net.InetAddress[] addrs = java.net.InetAddress.getAllByName(targetHost);
+                for (java.net.InetAddress a : addrs) {
+                    if (!targetAddresses.contains(a)) targetAddresses.add(a);
+                }
+            } catch (Exception ignored) {
+            }
+
+            if ("localhost".equalsIgnoreCase(targetHost) || "127.0.0.1".equals(targetHost)) {
+                try {
+                    java.net.InetAddress ipv4 = java.net.InetAddress.getByName("127.0.0.1");
+                    if (!targetAddresses.contains(ipv4)) targetAddresses.add(0, ipv4);
                 } catch (Exception ignored) {
                 }
             }
+
+            for (int port : candidatePorts) {
+                if (port <= 0 || port > 65535) continue;
+                for (java.net.InetAddress addr : targetAddresses) {
+                    try (Socket socket = new Socket()) {
+                        socket.connect(new InetSocketAddress(addr, port), 400);
+                        socket.setSoTimeout(1500);
+                        try (PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+                             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                            writer.println("PRELOAD " + uuid + ":" + name + ":" + x + ":" + y + ":" + z + ":" + yaw + ":" + pitch);
+                            String ack = reader.readLine();
+                            System.out.println("[SeemlessTransfers] PeerBridge preload confirmed for " + name
+                                    + " on " + addr.getHostAddress() + ":" + port + " (" + ack + ")");
+                            return; // Confirmed delivery to target server
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+            System.err.println("[SeemlessTransfers] PeerBridge notice: Preload socket could not reach " + targetHost + ":" + targetGamePort);
         });
     }
 
     public static void putTarget(UUID uuid, PreloadTarget target) {
-        PRELOAD_TARGETS.put(uuid, target);
+        putTarget(uuid, null, target);
+    }
+
+    public static void putTarget(UUID uuid, String name, PreloadTarget target) {
+        if (uuid != null) PRELOAD_TARGETS.put(uuid, target);
+        if (name != null && !name.isEmpty()) {
+            PRELOAD_TARGETS_BY_NAME.put(name.toLowerCase(java.util.Locale.ROOT), target);
+        }
     }
 
     public static PreloadTarget getAndConsumeTarget(UUID uuid) {
-        PreloadTarget target = PRELOAD_TARGETS.remove(uuid);
-        if (target == null) return null;
-        if (System.currentTimeMillis() - target.timestamp() > 60_000) {
-            return null;
+        return getAndConsumeTarget(uuid, null);
+    }
+
+    public static PreloadTarget getAndConsumeTarget(UUID uuid, String name) {
+        PreloadTarget target = null;
+        if (uuid != null) {
+            target = PRELOAD_TARGETS.remove(uuid);
+        }
+        if (target == null && name != null && !name.isEmpty()) {
+            target = PRELOAD_TARGETS_BY_NAME.remove(name.toLowerCase(java.util.Locale.ROOT));
+        }
+        if (target != null) {
+            if (uuid != null) PRELOAD_TARGETS.remove(uuid);
+            if (name != null && !name.isEmpty()) PRELOAD_TARGETS_BY_NAME.remove(name.toLowerCase(java.util.Locale.ROOT));
+            if (System.currentTimeMillis() - target.timestamp() > 60_000) {
+                return null;
+            }
         }
         return target;
     }

@@ -30,7 +30,7 @@ public class SeemlessTransfersNeoForge {
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer) {
             ServerPlayer player = (ServerPlayer) event.getEntity();
-            PreloadTarget target = PeerBridge.getAndConsumeTarget(player.getUUID());
+            PreloadTarget target = PeerBridge.getAndConsumeTarget(player.getUUID(), player.getName().getString());
             if (target != null) {
                 player.teleportTo(target.x(), target.y(), target.z());
                 player.setYRot(target.yaw());

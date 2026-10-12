@@ -122,8 +122,8 @@ public class SeemlessTransfersPaper extends JavaPlugin implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        // 1. Check instant PeerBridge memory cache (if direct peer socket reached this server)
-        PeerBridge.PreloadTarget peerTarget = PeerBridge.getAndConsumeTarget(player.getUniqueId());
+        // 1. Check instant PeerBridge memory cache (by UUID and Name)
+        PeerBridge.PreloadTarget peerTarget = PeerBridge.getAndConsumeTarget(player.getUniqueId(), player.getName());
         if (peerTarget != null) {
             teleportToTarget(player, peerTarget.x(), peerTarget.y(), peerTarget.z(), peerTarget.yaw(), peerTarget.pitch());
             return;
@@ -204,8 +204,13 @@ public class SeemlessTransfersPaper extends JavaPlugin implements Listener {
             } catch (Exception ignored) {
             }
 
-            // 3. The native 1.20.5+ transfer packet wrapper in Paper API
-            target.transfer(host, port);
+            // 3. The native 1.20.5+ transfer packet wrapper in Paper API (1-tick delay to ensure PeerBridge socket arrival)
+            Bukkit.getScheduler().runTaskLater(this, () -> {
+                if (target.isOnline()) {
+                    target.transfer(host, port);
+                }
+            }, 1L);
+
             sender.sendMessage(String.format("Admin fast-transferring %s to %s:%d at (%.1f, %.1f, %.1f, yaw: %.1f, pitch: %.1f)",
                     target.getName(), host, port, x, y, z, yaw, pitch));
 
