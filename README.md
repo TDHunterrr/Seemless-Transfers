@@ -28,6 +28,7 @@
 - 🎨 **Multi-Colored Brigadier Syntax Highlighting:** Native Brigadier command nodes registered across all platforms (Paper, Fabric, NeoForge). Displays rich multi-colored parameter hints in chat (yellow for player, green for IP, aqua for port, gold for coordinates and rotation).
 - 🍪 **Cryptographic Transfer Cookies:** Automatically encodes and verifies HMAC-SHA256 client cookies as an instant fallback mechanism.
 - ⏱️ **Zero Connection Throttling:** Automatically overrides Bukkit/Paper's legacy connection throttling (`0ms`), allowing players to hop between servers repeatedly without triggering `"Connection throttled!"` kicks.
+- 📊 **Real-Time Remote Player Count Placeholders:** Query any remote server's player count in real-time with `%sl_<ip>_<port>%` via PlaceholderAPI. Non-blocking asynchronous caching guarantees instant, zero-tick-stall retrieval for tablists, scoreboards, and server menus.
 - 🌐 **Cross-Platform Compatibility:** Operates seamlessly between **Fabric**, **Paper**, **Folia**, and **NeoForge** servers.
 
 ---
@@ -52,6 +53,21 @@ Fast-transfers the specified player to a target server and positions them at the
 ### Permissions
 - **Fabric / NeoForge:** Requires Operator Level 2 (`LEVEL_GAMEMASTERS`).
 - **Paper / Folia:** Requires Operator status (`op`) or the `seemless.admin` permission node.
+
+---
+
+## 📊 Placeholders (PlaceholderAPI)
+
+Seemless Transfers includes native [PlaceholderAPI](https://wiki.placeholderapi.com/) expansion support (`%sl_...%`) on Paper and Folia. It pings target servers asynchronously in the background using standard Minecraft Server List Ping (SLP), caching results with a 2-second TTL to ensure instantaneous, zero-lag retrieval for scoreboards, tablists, actionbars, and server selector menus:
+
+| Placeholder | Example | Description |
+| :--- | :--- | :--- |
+| `%sl_<ip>_<port>%` | `%sl_127.0.0.1_25565%` | **Real-time online player count** on the target server |
+| `%sl_<ip>%` | `%sl_mc.example.com%` | Online player count (defaults to game port `25565`) |
+| `%sl_online_<ip>_<port>%` | `%sl_online_play.server.com_25566%` | Explicit online player count |
+| `%sl_max_<ip>_<port>%` | `%sl_max_127.0.0.1_25565%` | Maximum player capacity configured on the target server |
+| `%sl_status_<ip>_<port>%` | `%sl_status_127.0.0.1_25565%` | Returns `Online` or `Offline` |
+| `%sl_ping_<ip>_<port>%` | `%sl_ping_127.0.0.1_25565%` | Server response latency in milliseconds |
 
 ---
 

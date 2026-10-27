@@ -53,6 +53,7 @@ public class SeemLessTransfers implements ModInitializer {
 		});
 
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			net.seemless.transfers.network.ServerPinger.shutdown();
 			net.seemless.transfers.network.PeerBridge.stopServer();
 		});
 

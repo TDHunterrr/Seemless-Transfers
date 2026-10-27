@@ -112,10 +112,21 @@ public class SeemlessTransfersPaper extends JavaPlugin implements Listener {
                     }
                 }
         );
+
+        // Register PlaceholderAPI expansion if installed
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            try {
+                new net.seemless.transfers.paper.placeholder.SeemlessPlaceholderExpansion(this).register();
+                getLogger().info("Hooked into PlaceholderAPI! Registered %sl_<ip>_<port>% expansion for real-time player counts.");
+            } catch (Throwable t) {
+                getLogger().warning("Could not register PlaceholderAPI expansion: " + t.getMessage());
+            }
+        }
     }
 
     @Override
     public void onDisable() {
+        net.seemless.transfers.network.ServerPinger.shutdown();
         PeerBridge.stopServer();
     }
 
