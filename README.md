@@ -56,9 +56,13 @@ Fast-transfers the specified player to a target server and positions them at the
 
 ---
 
-## 📊 Placeholders (PlaceholderAPI)
+## 📊 Real-Time Placeholders (All Loaders)
 
-Seemless Transfers includes native [PlaceholderAPI](https://wiki.placeholderapi.com/) expansion support (`%sl_...%`) on Paper and Folia. It pings target servers asynchronously in the background using standard Minecraft Server List Ping (SLP), caching results with a 2-second TTL to ensure instantaneous, zero-lag retrieval for scoreboards, tablists, actionbars, and server selector menus:
+Seemless Transfers features native placeholder integration across **Paper, Folia, Fabric, and NeoForge**. It asynchronously queries remote Minecraft servers via standard Server List Ping (SLP) with an atomic 2-second in-memory cache—ensuring instant, zero-tick-stall retrieval for tablists, scoreboards, actionbars, and server menus.
+
+### 📜 Paper / Folia (PlaceholderAPI)
+
+Supports standard [PlaceholderAPI](https://wiki.placeholderapi.com/) expansion `%sl_...%`:
 
 | Placeholder | Example | Description |
 | :--- | :--- | :--- |
@@ -68,6 +72,19 @@ Seemless Transfers includes native [PlaceholderAPI](https://wiki.placeholderapi.
 | `%sl_max_<ip>_<port>%` | `%sl_max_127.0.0.1_25565%` | Maximum player capacity configured on the target server |
 | `%sl_status_<ip>_<port>%` | `%sl_status_127.0.0.1_25565%` | Returns `Online` or `Offline` |
 | `%sl_ping_<ip>_<port>%` | `%sl_ping_127.0.0.1_25565%` | Server response latency in milliseconds |
+
+### 🧶 Fabric & NeoForge (Text Placeholder API)
+
+Dynamically hooks into [Text Placeholder API](https://modrinth.com/mod/placeholder-api) if installed on your Fabric or NeoForge server:
+
+| Placeholder | Example | Description |
+| :--- | :--- | :--- |
+| `%seemless:sl <ip>_<port>%` | `%seemless:sl 127.0.0.1_25565%` | Real-time online player count |
+| `%sl:count <ip>_<port>%` | `%sl:count play.myserver.com_25565%` | Real-time online player count |
+| `%sl:online <ip>:<port>%` | `%sl:online 127.0.0.1:25565%` | Colon port separator also supported |
+| `%sl:max <ip>_<port>%` | `%sl:max 127.0.0.1_25565%` | Maximum player capacity |
+| `%sl:status <ip>_<port>%` | `%sl:status 127.0.0.1_25565%` | Returns `Online` or `Offline` |
+| `%sl:ping <ip>_<port>%` | `%sl:ping 127.0.0.1_25565%` | Latency in milliseconds |
 
 ---
 

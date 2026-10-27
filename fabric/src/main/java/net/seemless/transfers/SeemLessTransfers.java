@@ -18,6 +18,9 @@ public class SeemLessTransfers implements ModInitializer {
 				net.seemless.transfers.command.SlTransferCommand::register
 		);
 
+		// Hook into Fabric Text Placeholder API if present
+		net.seemless.transfers.placeholder.FabricPlaceholderHook.registerIfPresent();
+
 		// Start peer bridge bound to the actual dedicated server port
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			int port = server.getPort() > 0 ? server.getPort() : 25565;

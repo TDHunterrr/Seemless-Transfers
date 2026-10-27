@@ -19,6 +19,7 @@ public class SeemlessTransfersNeoForge {
                 PeerBridge.DEFAULT_PEER_PORT,
                 payload -> {}
         );
+        net.seemless.transfers.placeholder.NeoForgePlaceholderHook.registerIfPresent();
     }
 
     @SubscribeEvent
