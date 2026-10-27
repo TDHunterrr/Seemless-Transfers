@@ -3,7 +3,7 @@ package net.seemless.transfers.paper.placeholder;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.Plugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import net.seemless.transfers.network.ServerPinger;
+import net.seemless.transfers.network.PlaceholderResolver;
 
 /**
  * PlaceholderAPI expansion for Seemless Transfers.
@@ -49,6 +49,6 @@ public class SeemlessPlaceholderExpansion extends PlaceholderExpansion {
         if (params == null || params.trim().isEmpty()) {
             return null;
         }
-        return net.seemless.transfers.network.PlaceholderResolver.resolve(params, "online");
+        return PlaceholderResolver.resolve(params, "online");
     }
 }

@@ -5,20 +5,15 @@ import java.lang.reflect.Proxy;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.seemless.transfers.network.PlaceholderResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Universal runtime placeholder bridge for NeoForge.
- * Dynamically hooks into Text Placeholder API / MiniPlaceholders if present
- * on the server, providing real-time %seemless:sl <ip>_<port>% queries
- * without hard compile or runtime dependencies.
+ * Dynamically hooks into Text Placeholder API if present on the server,
+ * providing real-time %seemless:sl <ip>_<port>% queries without hard compile or runtime dependencies.
  *
  * Authored by TD_Hunterrr. All Rights Reserved.
  */
 public final class NeoForgePlaceholderHook {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger("seemless-transfers");
 
     private NeoForgePlaceholderHook() {
     }
@@ -70,11 +65,9 @@ public final class NeoForgePlaceholderHook {
             registerHandler(registerMethod, handlerClass, finalValueMethod, "sl", "status", "status");
             registerHandler(registerMethod, handlerClass, finalValueMethod, "sl", "ping", "ping");
 
-            LOGGER.info("[Seemless Transfers] Successfully hooked into NeoForge Text Placeholder API! Registered %seemless:sl <ip>_<port>%");
-        } catch (ClassNotFoundException ignored) {
-            // Text Placeholder API is not installed; silently skip
-        } catch (Throwable t) {
-            LOGGER.debug("[Seemless Transfers] NeoForge Text Placeholder API hook skipped: {}", t.getMessage());
+            System.out.println("[Seemless Transfers] Successfully hooked into NeoForge Text Placeholder API! Registered %seemless:sl <ip>_<port>%");
+        } catch (Throwable ignored) {
+            // Text Placeholder API is not installed or skipped
         }
     }
 
